@@ -1,0 +1,137 @@
+.account-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 50px;
+}
+
+.account-sidebar {
+  background: var(--bg-secondary);
+  padding: 30px;
+  border-radius: 15px;
+  height: fit-content;
+}
+
+.user-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.avatar-placeholder {
+  width: 50px;
+  height: 50px;
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.account-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.account-nav button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 15px;
+  border-radius: 8px;
+  width: 100%;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.account-nav button.active {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+}
+
+.account-nav button:hover:not(.active) {
+  background: var(--border);
+  color: var(--text-primary);
+}
+
+.logout-btn {
+  margin-top: 20px;
+  color: #ff4757 !important;
+}
+
+.account-content h2 {
+  margin-bottom: 30px;
+}
+
+.order-item {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+}
+
+.status.delivered {
+  background: #2ed573;
+  color: white;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+
+.order-body {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.order-img {
+  width: 80px;
+  height: 80px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.order-info {
+  flex-grow: 1;
+}
+
+.order-info p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.order-info .price {
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 5px;
+}
+
+.track-btn {
+  border: 1px solid var(--text-primary);
+  padding: 8px 20px;
+  border-radius: 5px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 992px) {
+  .account-layout {
+    grid-template-columns: 1fr;
+  }
+}
