@@ -1,6 +1,7 @@
 import React from 'react';
 import { useState,useEffect } from 'react';
 import Hero from '../components/Hero';
+import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import { motion } from 'framer-motion';
 import { supabase } from '../supabase';
@@ -56,7 +57,7 @@ const HomeScreen = () => {
         <div className="container">
           <div className="section-header">
             <h2 className="section-title">New Arrivals</h2>
-            <a href="/shop" className="view-all">View All</a>
+            <Link to="/shop" className="view-all">View All</Link>
           </div>
           
           <div className="products-grid">
