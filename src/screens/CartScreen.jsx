@@ -21,7 +21,7 @@ const CartScreen = () => {
       </div>
     );
   }
-
+  console.log(cartItems[0]);
   return (
     <div className="section cart-page" style={{ paddingTop: '120px' }}>
       <div className="container">
@@ -33,7 +33,7 @@ const CartScreen = () => {
             {cartItems.map((item) => (
               <div className="cart-item" key={item.id}>
                 <div className="item-img-placeholder">
-                  <img src={item.image || 'https://placehold.co/100x100'} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                  <img src={item.images?.[0] || 'https://placehold.co/100x100'} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
                 </div>
                 <div className="item-details">
                   <h3>{item.name}</h3>
