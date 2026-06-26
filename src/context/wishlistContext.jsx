@@ -42,7 +42,7 @@ export const WishlistProvider=({children})=>{
         const {data, error } = await supabase
         .schema("marketplace_dataspace")
         .from("wishlists")
-        .select("*")
+        .select(`*, products(*)`)
         .eq('buyer_id', buyerId);
 
         if(error){
