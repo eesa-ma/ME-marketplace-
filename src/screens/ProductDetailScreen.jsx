@@ -157,7 +157,6 @@ const ProductDetailScreen = () => {
             </div>
             
             <div className="trust-badges">
-              <div className="badge-item"><Truck size={20} /> <span>Free Shipping</span></div>
               <div className="badge-item"><ShieldCheck size={20} /> <span>Secure Payment</span></div>
             </div>
           </div>

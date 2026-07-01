@@ -11,28 +11,28 @@ import { supabase } from "../supabase";
 import { useWishlist } from "../context/wishlistContext";
 import OrdersTab from "../components/account/OrdersTab";
 import WishlistTab from "../components/account/wishlistTab";
+import AddressTab from "../components/account/AddressTab";
 import "../styles/Account.css";
 
 const AccountScreen = ({ user, onLogout }) => {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [activeTab, setActiveTab] = useState("orders");
+  const [addresses, setAddresses] = useState([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(true);
 
   const displayName =
     user?.user_metadata?.full_name ||
     user?.user_metadata?.name ||
     user?.email?.split("@")[0] ||
     "User";
-
   const avatarLetter = displayName.charAt(0).toUpperCase();
   const email = user?.email || "";
 
   const { wishlist, removeFromWishlist } = useWishlist();
 
-  useEffect(() => {
-    if (!email) return;
-
-    const fetchOrders = async () => {
+      const fetchOrders = async () => {
+      if (!email) return;
       setLoadingOrders(true);
 
       const { data, error } = await supabase
@@ -49,23 +49,101 @@ const AccountScreen = ({ user, onLogout }) => {
       setLoadingOrders(false);
     };
 
-    fetchOrders();
+    const fetchAddresses = async () => {
+       if (!email) return;
+       setLoadingAddresses(true);
+
+      // Fetch addresses
+      const { data } = await supabase
+        .schema("marketplace_dataspace")
+        .from("buyer_addresses")
+        .select("*")
+        .eq("buyer_id", user.id)
+        .order("created_at", { ascending: false });
+
+      setAddresses(data || []);
+      setLoadingAddresses(false);
+      };
+
+  useEffect(() => {
+      fetchOrders();
+      fetchAddresses();
   }, [email]);
 
-  const getStatusBadge = (status) => {
-    if (!status) return null;
+const handleAddAddress = async (address) => {
+  const { error } = await supabase
+    .schema("marketplace_dataspace")
+    .from("buyer_addresses")
+    .insert({
+      ...address,
+      buyer_id: user.id,
+    });
 
-    const s = status.toLowerCase();
+  if (error) {
+    console.error(error);
+    return;
+  }
 
-    let cls = "status ";
+  await fetchAddresses();
+};
 
-    if (s === "delivered") cls += "delivered";
-    else if (s === "shipped") cls += "shipped";
-    else cls += "processing";
+const handleEditAddress = async (id, updatedAddress) => {
+  const { error } = await supabase
+    .schema("marketplace_dataspace")
+    .from("buyer_addresses")
+    .update(updatedAddress)
+    .eq("id", id);
 
-    return <span className={cls}>{status}</span>;
-  };
+  if (error) {
+    console.error(error);
+    return;
+  }
 
+await fetchAddresses();
+};
+
+const handleDeleteAddress = async (id) => {
+  const { error } = await supabase
+    .schema("marketplace_dataspace")
+    .from("buyer_addresses")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+await fetchAddresses();
+};
+
+const handleSetDefaultAddress = async (address) => {
+  // Remove existing default
+  const{ error: resetError } = await supabase
+    .schema("marketplace_dataspace")
+    .from("buyer_addresses")
+    .update({ is_default: false })
+    .eq("buyer_id", user.id);
+
+  if (resetError) {
+  console.error(resetError);
+  return;
+}
+
+  // Set selected address as default
+  const { error } = await supabase
+    .schema("marketplace_dataspace")
+    .from("buyer_addresses")
+    .update({ is_default: true })
+    .eq("id", address.id);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+await fetchAddresses();
+};
+   console.log(user.id);
   return (
     <div className="section account-page" style={{ paddingTop: "120px" }}>
       <div className="container">
@@ -100,7 +178,10 @@ const AccountScreen = ({ user, onLogout }) => {
                 Wishlist
               </button>
 
-              <button>
+              <button
+                className={activeTab === "addresses" ? "active" : ""}
+                onClick={() => setActiveTab("addresses")}
+              >
                 <MapPin size={18} />
                 Addresses
               </button>
@@ -135,6 +216,18 @@ const AccountScreen = ({ user, onLogout }) => {
                 <WishlistTab
                   wishlist={wishlist}
                   removeFromWishlist={removeFromWishlist}
+                />
+              )}
+            
+            {/* ================= ADDRESS ================= */}
+              {activeTab === "addresses" && (
+                <AddressTab
+                  addresses={addresses}
+                  loadingAddresses={loadingAddresses}
+                  onAdd={handleAddAddress}
+                  onEdit={handleEditAddress}
+                  onDelete={handleDeleteAddress}
+                  onSetDefault={handleSetDefaultAddress}
                 />
               )}
           </main>
