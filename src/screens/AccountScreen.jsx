@@ -1,54 +1,38 @@
-import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
   Package,
   MapPin,
   Settings,
   LogOut,
   Heart,
-  ShoppingBag,
-  CreditCard,
-  Truck,
-  Bell,
 } from "lucide-react";
 import BackButton from "../components/BackButton";
-import ProductCard from "../components/ProductCard";
-import NotificationInboxTab from "../components/NotificationInboxTab";
 import { supabase } from "../supabase";
 import { useWishlist } from "../context/wishlistContext";
-import { useNotifications } from "../context/NotificationContext";
+import OrdersTab from "../components/account/OrdersTab";
+import WishlistTab from "../components/account/wishlistTab";
+import AddressTab from "../components/account/AddressTab";
 import "../styles/Account.css";
 
 const AccountScreen = ({ user, onLogout }) => {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
-  const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState(
-    searchParams.get('tab') || 'orders'
-  );
-  const { unreadCount } = useNotifications();
-
-  // Sync tab if URL param changes (e.g. clicking bell icon)
-  useEffect(() => {
-    const tabFromUrl = searchParams.get('tab');
-    if (tabFromUrl) setActiveTab(tabFromUrl);
-  }, [searchParams]);
+  const [activeTab, setActiveTab] = useState("orders");
+  const [addresses, setAddresses] = useState([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(true);
 
   const displayName =
     user?.user_metadata?.full_name ||
     user?.user_metadata?.name ||
     user?.email?.split("@")[0] ||
     "User";
-
   const avatarLetter = displayName.charAt(0).toUpperCase();
   const email = user?.email || "";
 
   const { wishlist, removeFromWishlist } = useWishlist();
 
-  useEffect(() => {
-    if (!email) return;
-
-    const fetchOrders = async () => {
+      const fetchOrders = async () => {
+      if (!email) return;
       setLoadingOrders(true);
 
       const { data, error } = await supabase
@@ -65,23 +49,100 @@ const AccountScreen = ({ user, onLogout }) => {
       setLoadingOrders(false);
     };
 
-    fetchOrders();
-  }, [email]);
+    const fetchAddresses = async () => {
+       if (!email) return;
+       setLoadingAddresses(true);
 
-  const getStatusBadge = (status) => {
-    if (!status) return null;
+      // Fetch addresses
+      const { data } = await supabase
+        .schema("marketplace_dataspace")
+        .from("buyer_addresses")
+        .select("*")
+        .eq("buyer_id", user.id)
+        .order("created_at", { ascending: false });
 
-    const s = status.toLowerCase();
+      setAddresses(data || []);
+      setLoadingAddresses(false);
+      };
 
-    let cls = "status ";
+  useEffect(() => {
+      fetchOrders();
+      fetchAddresses();
+  }, [user]);
 
-    if (s === "delivered") cls += "delivered";
-    else if (s === "shipped") cls += "shipped";
-    else cls += "processing";
+const handleAddAddress = async (address) => {
+  const { error } = await supabase
+    .schema("marketplace_dataspace")
+    .from("buyer_addresses")
+    .insert({
+      ...address,
+      buyer_id: user.id,
+    });
 
-    return <span className={cls}>{status}</span>;
-  };
+  if (error) {
+    console.error(error);
+    return;
+  }
 
+  await fetchAddresses();
+};
+
+const handleEditAddress = async (id, updatedAddress) => {
+  const { error } = await supabase
+    .schema("marketplace_dataspace")
+    .from("buyer_addresses")
+    .update(updatedAddress)
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+await fetchAddresses();
+};
+
+const handleDeleteAddress = async (id) => {
+  const { error } = await supabase
+    .schema("marketplace_dataspace")
+    .from("buyer_addresses")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+await fetchAddresses();
+};
+
+const handleSetDefaultAddress = async (address) => {
+  // Remove existing default
+  const{ error: resetError } = await supabase
+    .schema("marketplace_dataspace")
+    .from("buyer_addresses")
+    .update({ is_default: false })
+    .eq("buyer_id", user.id);
+
+  if (resetError) {
+  console.error(resetError);
+  return;
+}
+
+  // Set selected address as default
+  const { error } = await supabase
+    .schema("marketplace_dataspace")
+    .from("buyer_addresses")
+    .update({ is_default: true })
+    .eq("id", address.id);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+await fetchAddresses();
+};
   return (
     <div className="section account-page" style={{ paddingTop: "120px" }}>
       <div className="container">
@@ -116,27 +177,15 @@ const AccountScreen = ({ user, onLogout }) => {
                 Wishlist
               </button>
 
-              <button>
+              <button
+                className={activeTab === "addresses" ? "active" : ""}
+                onClick={() => setActiveTab("addresses")}
+              >
                 <MapPin size={18} />
                 Addresses
               </button>
 
-              <button
-                className={activeTab === "notifications" ? "active" : ""}
-                onClick={() => setActiveTab("notifications")}
-                style={{ position: 'relative' }}
-              >
-                <Bell size={18} />
-                Notifications
-                {unreadCount > 0 && (
-                  <span className="sidebar-notif-badge">{unreadCount}</span>
-                )}
-              </button>
-
-              <button
-                className={activeTab === "settings" ? "active" : ""}
-                onClick={() => setActiveTab("settings")}
-              >
+              <button>
                 <Settings size={18} />
                 Settings
               </button>
@@ -154,190 +203,32 @@ const AccountScreen = ({ user, onLogout }) => {
             {/* ================= ORDERS ================= */}
 
             {activeTab === "orders" && (
-              <>
-                <h2>My Orders</h2>
-
-                {loadingOrders ? (
-                  <p className="orders-loading">Loading your orders...</p>
-                ) : orders.length === 0 ? (
-                  <div className="orders-empty">
-                    <ShoppingBag size={48} strokeWidth={1.2} />
-                    <h3>No orders yet</h3>
-                    <p>When you place an order, it will appear here.</p>
-                  </div>
-                ) : (
-                  <div className="orders-list">
-                    {orders.map((order) => {
-                      const items = Array.isArray(order.items)
-                        ? order.items
-                        : [];
-
-                      const shortId = order.id
-                        ?.toString()
-                        .slice(-8)
-                        .toUpperCase();
-
-                      return (
-                        <div className="order-item" key={order.id}>
-                          {/* Header */}
-
-                          <div className="order-header">
-                            <div className="order-header-left">
-                              <span className="order-id">
-                                Order #{shortId}
-                              </span>
-
-                              <span className="order-date">
-                                {order.created_at &&
-                                  new Date(
-                                    order.created_at
-                                  ).toLocaleDateString("en-IN", {
-                                    day: "numeric",
-                                    month: "short",
-                                    year: "numeric",
-                                  })}
-                              </span>
-                            </div>
-
-                            <div className="order-header-right">
-                              {getStatusBadge(order.fulfillment_status)}
-                              {getStatusBadge(order.payment_status)}
-                            </div>
-                          </div>
-
-                          {/* Products */}
-
-                          {items.length > 0 ? (
-                            <div className="order-items-list">
-                              {items.map((item, index) => (
-                                <div className="order-body" key={index}>
-                                  <div className="order-img">
-                                    {(item.image_url || item.image) && (
-                                      <img
-                                        src={item.image_url || item.image}
-                                        alt={
-                                          item.name ||
-                                          item.product_name
-                                        }
-                                        style={{
-                                          width: "100%",
-                                          height: "100%",
-                                          objectFit: "cover",
-                                          borderRadius: "8px",
-                                        }}
-                                      />
-                                    )}
-                                  </div>
-
-                                  <div className="order-info">
-                                    <h4>
-                                      {item.name ||
-                                        item.product_name ||
-                                        "Product"}
-                                    </h4>
-
-                                    <p>Qty: {item.quantity || 1}</p>
-
-                                    <p className="price">
-                                      ₹{item.price ?? "--"}
-                                    </p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p
-                              style={{
-                                color: "var(--text-secondary)",
-                                margin: "12px 0",
-                              }}
-                            >
-                              No item details available.
-                            </p>
-                          )}
-
-                          {/* Footer */}
-
-                          <div className="order-footer">
-                            <div className="order-footer-info">
-                              {order.payment_method && (
-                                <span className="footer-tag">
-                                  <CreditCard size={14} />
-                                  {order.payment_method}
-                                </span>
-                              )}
-
-                              {order.tracking_number && (
-                                <span className="footer-tag">
-                                  <Truck size={14} />
-                                  {order.courier_partner
-                                    ? `${order.courier_partner}: `
-                                    : ""}
-                                  {order.tracking_number}
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="order-total">
-                              Total:
-                              <strong>
-                                ₹{order.total_amount ?? "--"}
-                              </strong>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </>
+              <OrdersTab
+                orders={orders}
+                loadingOrders={loadingOrders}
+              />
             )}
 
             {/* ================= WISHLIST ================= */}
 
-            {activeTab === "wishlist" && (
-              <>
-                <h2>My Wishlist</h2>
-
-                {wishlist.length === 0 ? (
-                  <div className="orders-empty">
-                    <ShoppingBag size={48} strokeWidth={1.2} />
-                    <h3>Your wishlist is empty</h3>
-                    <p>Add products you love to your wishlist.</p>
-                  </div>
-                ) : (
-                  <div className="wishlist-grid">
-                    {wishlist.map((item) => (
-                      <ProductCard
-                        key={item.products.id}
-                        product={item.products}
-                        showRemoveButton={true}
-                        onRemove={removeFromWishlist}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-            {/* ================= NOTIFICATIONS ================= */}
-
-            {activeTab === "notifications" && (
-              <NotificationInboxTab />
-            )}
-
-            {/* ================= SETTINGS ================= */}
-
-            {activeTab === "settings" && (
-              <div className="settings-tab">
-                <h2>Settings</h2>
-                <div className="orders-empty" style={{ marginTop: '20px' }}>
-                  <Settings size={48} strokeWidth={1.2} />
-                  <h3>Coming Soon</h3>
-                  <p>Account settings and preferences will be available here.</p>
-                </div>
-              </div>
-            )}
-
+              {activeTab === "wishlist" && (
+                <WishlistTab
+                  wishlist={wishlist}
+                  removeFromWishlist={removeFromWishlist}
+                />
+              )}
+            
+            {/* ================= ADDRESS ================= */}
+              {activeTab === "addresses" && (
+                <AddressTab
+                  addresses={addresses}
+                  loadingAddresses={loadingAddresses}
+                  onAdd={handleAddAddress}
+                  onEdit={handleEditAddress}
+                  onDelete={handleDeleteAddress}
+                  onSetDefault={handleSetDefaultAddress}
+                />
+              )}
           </main>
         </div>
       </div>
