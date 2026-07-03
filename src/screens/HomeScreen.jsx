@@ -11,8 +11,13 @@ const HomeScreen = () => {
 
   const [products, setProducts]= useState([]);
   const [loading, setLoading] = useState(true);
+  const [communities, setCommunities]= useState([]);
+  
 
-  useEffect(()=>{fetchProducts();},[]);
+  useEffect(()=>{
+    fetchProducts();
+    fetchCommunities();
+  },[]);
 
   async function fetchProducts(){
     setLoading(true);
@@ -31,6 +36,20 @@ const HomeScreen = () => {
     setLoading(false);
   }
 
+  async function fetchCommunities(){
+      const { data, error } = await supabase
+      .schema('marketplace_dataspace')
+      .from('sellers')
+      .select('*');
+  
+      if(error){
+        console.error(error);
+        return;
+      }
+  
+      setCommunities(data);
+  }
+
 
 
   return (
@@ -41,18 +60,29 @@ const HomeScreen = () => {
         <div className="container">
           <h2 className="section-title">Shop by Community</h2>
           <div className="category-grid">
-            {['Mind Empowered', 'Smrithi', 'Kairali Foundation', 'Fr. Agostino Vicini Special School'].map((cat, i) => (
+            {communities.map((community, i) => (
+              <Link to={`/shop?category=${community.id}`} key={community.id} className="category-card" >
+              
               <motion.div 
-                key={cat} 
+                key={community.id} 
                 className="category-item"
                 whileHover={{ scale: 1.05 }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
               >
-                <div className="cat-placeholder"></div>
-                <span>{cat}</span>
+                <div className="cat-placeholder">
+                    {community.logo && (
+                      <img
+                        src={community.logo || "https://placehold.co/200x200"}
+                        alt={community.shop_name}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    )}
+                </div>
+                <span>{community.shop_name}</span>
               </motion.div>
+              </Link>
             ))}
           </div>
         </div>
