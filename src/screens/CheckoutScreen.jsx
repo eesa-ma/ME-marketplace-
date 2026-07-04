@@ -7,12 +7,16 @@ import { useNotifications } from '../context/NotificationContext';
 import { supabase } from '../supabase';
 import BackButton from '../components/BackButton';
 import '../styles/CheckoutScreen.css';
+import AddressDrawer from "../components/checkout/AddressDrawer";
+
 
 const CheckoutScreen = ({ user }) => {
   const { cartItems, cartTotal, clearCart } = useCart();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { addNotification } = useNotifications();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState(null);
 
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [fetchingAddresses, setFetchingAddresses] = useState(true);
@@ -53,7 +57,14 @@ const CheckoutScreen = ({ user }) => {
     fetchAddresses();
   }, [user]);
 
+      useEffect(() => {
+      if (savedAddresses.length > 0) {
+        const defaultAddr =
+          savedAddresses.find(addr => addr.is_default) || savedAddresses[0];
 
+        setSelectedAddress(defaultAddr);
+      }
+    }, [savedAddresses]);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -63,10 +74,10 @@ const CheckoutScreen = ({ user }) => {
       return;
     }
 
-          const selected = defaultAddress;
+          const selected = selectedAddress;
 
       if (!selected) {
-        setError("Please add a default shipping address.");
+        setError("Please add a shipping address.");
         return;
       }
 
@@ -187,8 +198,6 @@ const orderPayloads = Object.entries(sellerGroups).map(([sid, groupItems]) => {
     { label: 'Cash on Delivery', icon: <Banknote size={18} /> },
   ];
 
-  const defaultAddress = savedAddresses.find(addr => addr.is_default);
-
   return (
     <div className="section checkout-page" style={{ paddingTop: '120px' }}>
       <div className="container">
@@ -210,47 +219,53 @@ const orderPayloads = Object.entries(sellerGroups).map(([sid, groupItems]) => {
                   </div>
                 ) : (
                     <div className="addresses-list">
-                      {defaultAddress && (
+                      {selectedAddress ? (
                         <div className="address-card">
                           <div className="address-header">
                               <div className="address-header-left">
                                 <MapPin size={18} />
-                                <span className="default-badge">Default</span>
+                                  {selectedAddress.is_default && (
+                                    <span className="default-badge">
+                                      Default
+                                    </span>
+                                  )}
                               </div>
 
                                   <button
                                     type="button"
                                     className="change-address-btn"
-                                    onClick={() => {
-                                      // we'll implement this next
-                                    }}
+                                    onClick={() => setDrawerOpen(true)}
                                   >
                                     Change
                                   </button>
                             </div>
 
-                          <div className="address-body">
-                            <p>
-                              <strong>{defaultAddress.name}</strong> • {defaultAddress.phone}
-                            </p>
+                              <div className="address-body">
+                                <p>
+                                  <strong>{selectedAddress.name}</strong> • {selectedAddress.phone}
+                                </p>
 
-                            <p>
-                              {defaultAddress.address_line_1}
-                              {defaultAddress.address_line_2
-                                ? `, ${defaultAddress.address_line_2}`
-                                : ''}
-                            </p>
+                                <p>
+                                  {selectedAddress.address_line_1}
+                                  {selectedAddress.address_line_2 &&
+                                    `, ${selectedAddress.address_line_2}`}
+                                </p>
 
-                            {defaultAddress.landmark && (
-                              <p>Near {defaultAddress.landmark}</p>
-                            )}
+                                {selectedAddress.landmark && (
+                                  <p>Near {selectedAddress.landmark}</p>
+                                )}
 
-                            <p>
-                              {defaultAddress.city}, {defaultAddress.state} -{' '}
-                              {defaultAddress.postal_code}
-                            </p>
-                          </div>
+                                <p>
+                                  {selectedAddress.city}, {selectedAddress.state} -{" "}
+                                  {selectedAddress.postal_code}
+                                </p>
+                              </div>
                         </div>
+                      ) : (
+                      <div className="no-address">
+                          <p>No saved address.</p>
+                          <p>Add a shipping address from your Account before placing an order.</p>
+                      </div>
                       )}
                     </div>
                 )}
@@ -321,6 +336,16 @@ const orderPayloads = Object.entries(sellerGroups).map(([sid, groupItems]) => {
           </div>
         </form>
       </div>
+        <AddressDrawer
+          isOpen={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          addresses={savedAddresses}
+          selectedAddress={selectedAddress}
+          onSelect={(address) => {
+            setSelectedAddress(address);
+            setDrawerOpen(false);
+          }}
+        />
     </div>
   );
 };
