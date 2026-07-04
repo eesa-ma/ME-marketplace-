@@ -46,22 +46,43 @@
   padding: 15px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  text-align: center;
   cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .option:hover {
   border-color: var(--accent);
 }
 
+.option.selected {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
 .complete-order-btn {
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
   background: var(--text-primary);
   color: var(--bg-primary);
   padding: 18px;
   border-radius: 8px;
   font-weight: 700;
   font-size: 1.1rem;
+}
+
+.complete-order-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .order-summary-side {
@@ -113,20 +134,6 @@
   }
 }
 
-.option {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.option.selected {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: white;
-  font-weight: 600;
-}
-
 .form-grid input,
 .form-grid textarea {
   background: var(--bg-secondary);
@@ -162,26 +169,19 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--bg-secondary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.address-card:hover {
-  border-color: var(--accent);
-}
-
-.address-card.selected {
-  border-color: var(--accent);
-  background: rgba(144, 238, 144, 0.05); /* very light accent tint */
-  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .address-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
   margin-bottom: 10px;
-  color: var(--text-primary);
+}
+
+.address-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .default-badge {
@@ -217,7 +217,71 @@
   animation: fadeIn 0.3s ease;
 }
 
+/* Loading indicator */
+.loading-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+/* Save address checkbox */
+.save-address-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.save-address-checkbox input {
+  width: auto;
+  cursor: pointer;
+}
+
+/* Error message */
+.checkout-error {
+  color: #ff4757;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+/* Mini cart item */
+.mini-item img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.mini-info-secondary {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* Empty cart message */
+.empty-cart-message {
+  color: var(--text-secondary);
+}
+
+.change-address-btn {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.change-address-btn:hover {
+  text-decoration: underline;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
