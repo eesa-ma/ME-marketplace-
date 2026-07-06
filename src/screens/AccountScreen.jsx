@@ -51,22 +51,87 @@ const AccountScreen = ({ user, onLogout }) => {
       setLoadingOrders(false);
     };
 
-    fetchOrders();
-  }, [email]);
+    const fetchAddresses = async () => {
+       if (!email) return;
+       setLoadingAddresses(true);
+
+      // Fetch addresses
+      const { data } = await supabase
+        .schema("marketplace_dataspace")
+        .from("buyer_addresses")
+        .select("*")
+        .eq("buyer_id", user.id)
+        .order("is_default", { ascending: false })
+        .order("created_at", { ascending: false });
 
   const getStatusBadge = (status) => {
     if (!status) return null;
 
-    const s = status.toLowerCase();
+  useEffect(() => {
+      fetchOrders();
+      fetchAddresses();
+  }, [user]);
 
-    let cls = "status ";
+const handleAddAddress = async (address) => {
+
+  // If this address is marked as default,
+  // remove default from all existing addresses first.
+  if (address.is_default) {
+    const { error: resetError } = await supabase
+      .schema("marketplace_dataspace")
+      .from("buyer_addresses")
+      .update({ is_default: false })
+      .eq("buyer_id", user.id);
+
+    if (resetError) {
+      console.error(resetError);
+      return;
+    }
+  }
+
+  const { error } = await supabase
+    .schema("marketplace_dataspace")
+    .from("buyer_addresses")
+    .insert({
+      ...address,
+      buyer_id: user.id,
+    });
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  fetchAddresses();
+};
+
+const handleEditAddress = async (id, updatedAddress) => {
+
+  if (updatedAddress.is_default) {
+    const { error: resetError } = await supabase
+      .schema("marketplace_dataspace")
+      .from("buyer_addresses")
+      .update({ is_default: false })
+      .eq("buyer_id", user.id);
+
+    if (resetError) {
+      console.error(resetError);
+      return;
+    }
+  }
+
+  const { error } = await supabase
+    .schema("marketplace_dataspace")
+    .from("buyer_addresses")
+    .update(updatedAddress)
+    .eq("id", id);
 
     if (s === "delivered") cls += "delivered";
     else if (s === "shipped") cls += "shipped";
     else cls += "processing";
 
-    return <span className={cls}>{status}</span>;
-  };
+  fetchAddresses();
+};
 
   return (
     <div className="section account-page" style={{ paddingTop: "120px" }}>
