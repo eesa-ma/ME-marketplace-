@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingCart, Heart, ShieldCheck } from 'lucide-react';
+import { ShoppingCart, Heart, ShieldCheck,Share2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import BackButton from '../components/BackButton';
 import MoonRating from '../components/MoonRating';
@@ -90,6 +90,25 @@ const ProductDetailScreen = () => {
     addToCart(product);
   };
 
+  const handleShare = async () => {
+    const productUrl = `${window.location.origin}/product/${product.id}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: product.name,
+          text: `Check out this product: ${product.name}`,
+          url: productUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(productUrl);
+        alert("Product link copied to clipboard!");
+      }
+    } catch (err) {
+      console.error("Share failed:", err);
+    }
+  };
+
   if (!product) {
     return (
       <div className="section product-detail-page" style={{ paddingTop: '120px' }}>
@@ -134,6 +153,9 @@ const ProductDetailScreen = () => {
           <div className="detail-images">
             <div className="main-image-placeholder">
               <img src={product.images?.[0]} alt={product.name} />
+                  <button className="share-btn" onClick={handleShare} aria-label="Share product">
+                    <Share2 size={20} />
+                  </button>
                 {product.images?.length > 1 && (
                   <button
                     className="view-all-images"
