@@ -1,4 +1,5 @@
 import { X, MapPin, Phone, Check } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import "../../styles/AddressDrawer.css";
 
 const AddressDrawer = ({
@@ -8,6 +9,9 @@ const AddressDrawer = ({
   selectedAddress,
   onSelect,
 }) => {
+
+const navigate=useNavigate();
+
   if (!isOpen) return null;
 
   return (
@@ -91,9 +95,9 @@ const AddressDrawer = ({
         <div className="drawer-footer">
           <button
             className="drawer-done-btn"
-            onClick={onClose}
+            onClick={() => navigate("/account",{ state: { activeTab: "addresses" , openForm : true , },})}
           >
-            Done
+            + Add New Address
           </button>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect,useState } from "react";
 import AddressCard from "./AddressCard";
 import AddressForm from "./AddressForm";
 import "../../styles/AddressTab.css";
@@ -9,9 +9,17 @@ const AddressTab = ({
   onEdit,
   onDelete,
   onSetDefault,
+  openForm,
 }) => {
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(openForm || false);
   const [editingAddress, setEditingAddress] = useState(null);
+
+  useEffect(() => {
+  if (openForm) {
+    setShowForm(true);
+    setEditingAddress(null);
+  }
+}, [openForm]);
 
   const handleAddClick = () => {
     setEditingAddress(null);
