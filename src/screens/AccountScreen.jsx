@@ -9,22 +9,17 @@ import {
 import BackButton from "../components/BackButton";
 import { supabase } from "../supabase";
 import { useWishlist } from "../context/wishlistContext";
-import { useLocation } from "react-router-dom";
 import OrdersTab from "../components/account/OrdersTab";
 import WishlistTab from "../components/account/wishlistTab";
 import AddressTab from "../components/account/AddressTab";
 import "../styles/Account.css";
 
 const AccountScreen = ({ user, onLogout }) => {
-
-  const location= useLocation();
-
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
-  const [activeTab, setActiveTab] = useState(location.state?.activeTab ||"orders");
+  const [activeTab, setActiveTab] = useState("orders");
   const [addresses, setAddresses] = useState([]);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
-
 
   const displayName =
     user?.user_metadata?.full_name ||
@@ -36,12 +31,6 @@ const AccountScreen = ({ user, onLogout }) => {
   const email = user?.email || "";
 
   const { wishlist, removeFromWishlist } = useWishlist();
-
-  useEffect(() => {
-  if (location.state?.activeTab) {
-    setActiveTab(location.state.activeTab);
-  }
-}, [location.state]);
 
   // ── Data fetching ────────────────────────────────────────────────────────────
 
@@ -276,7 +265,6 @@ const AccountScreen = ({ user, onLogout }) => {
                 onEdit={handleEditAddress}
                 onDelete={handleDeleteAddress}
                 onSetDefault={handleSetDefaultAddress}
-                openForm={location.state?.openForm}
               />
             )}
 

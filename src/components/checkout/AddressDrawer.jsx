@@ -1,6 +1,7 @@
 import { X, MapPin, Phone, Check } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import "../../styles/AddressDrawer.css";
+import AddressForm from "../account/AddressForm";
 
 const AddressDrawer = ({
   isOpen,
@@ -8,11 +9,15 @@ const AddressDrawer = ({
   addresses,
   selectedAddress,
   onSelect,
+  onAddAddress,
 }) => {
-
-const navigate=useNavigate();
-
   if (!isOpen) return null;
+
+  const [showForm, setShowForm] = useState(false);
+  const handleSubmit = async (data) => {
+    await onAddAddress(data);
+    setShowForm(false);
+  };
 
   return (
     <>
@@ -31,7 +36,8 @@ const navigate=useNavigate();
             <X size={22} />
           </button>
         </div>
-
+      {showForm ? (
+        <AddressForm title="Add Address" onSubmit={handleSubmit}/>):(
         <div className="drawer-body">
           {addresses.length === 0 ? (
             <div className="drawer-empty">
@@ -91,11 +97,12 @@ const navigate=useNavigate();
             })
           )}
         </div>
+        )}
 
         <div className="drawer-footer">
           <button
             className="drawer-done-btn"
-            onClick={() => navigate("/account",{ state: { activeTab: "addresses" , openForm : true , },})}
+            onClick={() => setShowForm(true)}
           >
             + Add New Address
           </button>
