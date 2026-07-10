@@ -16,7 +16,6 @@ const ProductDetailScreen = () => {
   const [product, setProduct]= useState(null);
   const [reviews, setReviews]=useState([]);
   const { toggleWishlist, isWishlisted } = useWishlist();
-  const [showGallery, setShowGallery] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   useEffect(() => {
@@ -157,15 +156,15 @@ const ProductDetailScreen = () => {
         <div className="detail-grid">
           <div className="detail-images">
             <div className="main-image-placeholder">
-              <img src={product.images?.[0]} alt={product.name} />
+              <img src={product.images?.[currentImageIndex]} alt={product.name} />
                   <button className="share-btn" onClick={handleShare} aria-label="Share product">
                     <Share2 size={20} />
                   </button>
                 {product.images?.length > 1 && (
                   <>
                   <button
-                    className="view-all-images"
-                    onClick={() => setShowGallery(true)}
+                    style={{ position: 'absolute', top: '50%', left: '10px', transform: 'translateY(-50%)', background: 'var(--bg-primary)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.2)', fontSize: '18px', color: 'var(--text-primary)' }}
+                    onClick={handlePrevImage}
                   >
                     ❮
                   </button>
@@ -249,34 +248,6 @@ const ProductDetailScreen = () => {
           </div>
         </div>
       </div>
-            {showGallery && (
-        <div
-          className="gallery-overlay"
-          onClick={() => setShowGallery(false)}
-        >
-          <div
-            className="gallery-content"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="gallery-close"
-              onClick={() => setShowGallery(false)}
-            >
-              ✕
-            </button>
-
-            <div className="gallery-grid">
-              {product.images?.map((image, index) => (
-                <img
-                  key={index}
-                  src={image}
-                  alt={`${product.name} ${index + 1}`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
