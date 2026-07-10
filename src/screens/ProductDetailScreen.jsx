@@ -139,13 +139,6 @@ const ProductDetailScreen = () => {
     );
   }
 
-  const averageRating =
-    reviews.length === 0
-        ? 0
-        : reviews.reduce((sum, review) => sum + review.rating, 0) /
-          reviews.length;
-          reviews.length;
-          console.log(product.images);
 
   const handlePrevImage = () => {
     if (!product || !product.images) return;
@@ -214,7 +207,7 @@ const ProductDetailScreen = () => {
           <div className="detail-info">
             <span className="brand-label">{product.shop_name || 'Marketplace Item'}</span>
             <h1>{product.name}</h1>
-            <MoonRating rating={averageRating} count={reviews.length} />
+            <MoonRating rating={product.average_rating} count={product.rating_count} />
             <div className="price-tag">
               <span className="current-price">₹{product.price}</span>
               {product.oldPrice && <span className="old-price" style={{ marginLeft: '15px', textDecoration: 'line-through', color: 'var(--text-secondary)', fontSize: '1.5rem' }}>₹{product.oldPrice}</span>}
