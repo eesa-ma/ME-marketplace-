@@ -12,6 +12,7 @@ import { useWishlist } from "../context/wishlistContext";
 import OrdersTab from "../components/account/OrdersTab";
 import WishlistTab from "../components/account/wishlistTab";
 import AddressTab from "../components/account/AddressTab";
+import SettingsTab from "../components/account/settingsTab";
 import "../styles/Account.css";
 
 const AccountScreen = ({ user, onLogout }) => {
@@ -20,10 +21,10 @@ const AccountScreen = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState("orders");
   const [addresses, setAddresses] = useState([]);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
+  const [buyer, setBuyer] = useState(null);
 
   const displayName =
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.name ||
+    buyer?.name ||
     user?.email?.split("@")[0] ||
     "User";
 
@@ -33,6 +34,21 @@ const AccountScreen = ({ user, onLogout }) => {
   const { wishlist, removeFromWishlist } = useWishlist();
 
   // ── Data fetching ────────────────────────────────────────────────────────────
+
+  const fetchBuyer = async () => {
+  if (!user?.id) return;
+
+  const { data, error } = await supabase
+    .schema("marketplace_dataspace")
+    .from("buyers")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  if (!error) {
+    setBuyer(data);
+  }
+  };
 
   const fetchAddresses = async () => {
     if (!user?.id) return;
@@ -107,6 +123,7 @@ const AccountScreen = ({ user, onLogout }) => {
       setLoadingOrders(false);
     };
 
+    fetchBuyer();
     fetchOrders();
     fetchAddresses();
   }, [user]);
@@ -224,7 +241,10 @@ const AccountScreen = ({ user, onLogout }) => {
                 Addresses
               </button>
 
-              <button>
+              <button
+                className={activeTab === "settings" ? "active" : ""}
+                onClick={() => setActiveTab("settings")}
+              >
                 <Settings size={18} />
                 Settings
               </button>
@@ -265,6 +285,15 @@ const AccountScreen = ({ user, onLogout }) => {
                 onEdit={handleEditAddress}
                 onDelete={handleDeleteAddress}
                 onSetDefault={handleSetDefaultAddress}
+              />
+            )}
+
+            {/* SETTINGS */}
+            {activeTab === "settings" && (
+              <SettingsTab
+                user={user}
+                buyer={buyer}
+                onProfileUpdated={fetchBuyer}
               />
             )}
 
