@@ -162,6 +162,7 @@ const orderPayloads = Object.entries(sellerGroups).map(([sid, groupItems]) => {
   return {
     seller_id: sid === 'no_seller' ? null : sid,
     customer_name: customerName,
+    buyer_id: user.id,
     customer_email: user?.email || '',
     customer_phone: customerPhone,
     shipping_address: finalShippingAddress,
