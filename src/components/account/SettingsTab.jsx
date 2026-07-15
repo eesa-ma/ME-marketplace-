@@ -7,32 +7,62 @@ const SettingsTab = ({ user, buyer, onProfileUpdated }) => {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState(buyer?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
 
 
     useEffect(() => {
-        setName(buyer?.name || "");
-    }, [buyer]);
+      setName(buyer?.name || "");
+      setEmail(user?.email || "");
+    }, [buyer, user]);
 
     // edit buyer profile
   
-const handleSave = async () => {
-  setLoading(true);
+  const handleSave = async () => {
+    setLoading(true);
 
-  const { error } = await supabase
-    .schema("marketplace_dataspace")
-    .from("buyers")
-    .update({ name })
-    .eq("id", user.id);
+    const newName = name.trim();
+    const newEmail = email.trim();
 
-  setLoading(false);
+    const { error: nameError } = await supabase
+      .schema("marketplace_dataspace")
+      .from("buyers")
+      .update({ name: newName })
+      .eq("id", user.id);
 
-  if (!error) {
+    let emailError = null;
+
+    if (newEmail !== user.email) {
+ const { data, error } = await supabase.auth.updateUser({
+  email: newEmail,
+});
+
+console.log("Update User Data:", data);
+console.log("Update User Error:", error);
+
+emailError = error;
+    }
+
+    setLoading(false);
+
+    if (nameError || emailError) {
+      console.error("Name Error:", nameError);
+      console.error("Email Error:", emailError);
+
+      alert(
+        nameError?.message ||
+        emailError?.message ||
+        "Failed to update profile."
+      );
+
+      return;
+    }
+
     onProfileUpdated();
     setEditing(false);
-  } else {
-    console.error(error);
-  }
-};
+
+    
+  };
+  
 
   return (
     <div className="settings-tab">
@@ -52,31 +82,43 @@ const handleSave = async () => {
         <label>Full Name</label>
 
         {editing ? (
-          <>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-
-            <div className="setting-actions">
-                <button
-                  onClick={() => {
-                    setName(buyer?.name || "");
-                    setEditing(false);
-                  }}
-                >
-                  Cancel
-                </button>
-
-              <button onClick={handleSave} disabled={loading}>
-                {loading ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
         ) : (
           <p>{name}</p>
         )}
+
+        <label>Email</label>
+
+        {editing ? (
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        ) : (
+          <p>{user?.email}</p>
+        )}
       </div>
+      {editing && (
+        <div className="setting-actions">
+          <button
+            onClick={() => {
+              setName(buyer?.name || "");
+              setEmail(user?.email || "");
+              setEditing(false);
+            }}
+          >
+            Cancel
+          </button>
+
+          <button onClick={handleSave} disabled={loading}>
+            {loading ? "Saving..." : "Save"}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

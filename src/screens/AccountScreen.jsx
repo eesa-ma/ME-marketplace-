@@ -99,7 +99,7 @@ const AccountScreen = ({ user, onLogout }) => {
         .schema("marketplace_dataspace")
         .from("orders")
         .select("*")
-        .eq("customer_email", email)
+        .eq("buyer_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error || !data) {
